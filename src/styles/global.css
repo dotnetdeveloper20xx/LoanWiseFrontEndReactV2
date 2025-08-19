@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+/* Light/Dark tokens */
+:root {
+  --bg: 255 255 255;
+  --fg: 17 24 39;
+  --card: 249 250 251;
+  --muted: 107 114 128;
+  --primary: 37 99 235;
+  --primary-fg: 255 255 255;
+}
+
+.dark {
+  --bg: 17 24 39;
+  --fg: 243 244 246;
+  --card: 31 41 55;
+  --muted: 156 163 175;
+  --primary: 96 165 250;
+  --primary-fg: 17 24 39;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: rgb(var(--bg));
+  color: rgb(var(--fg));
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl shadow-sm border border-black/5;
+    background-color: rgb(var(--card));
+  }
+  .btn {
+    @apply inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition;
+    background-color: rgb(var(--primary));
+    color: rgb(var(--primary-fg));
+  }
+  .btn:hover {
+    filter: brightness(0.95);
+  }
+}
