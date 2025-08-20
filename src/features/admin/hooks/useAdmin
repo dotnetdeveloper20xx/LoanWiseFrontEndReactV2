@@ -1,0 +1,56 @@
+// src/features/admin/hooks/useAdmin.ts
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  approveLoan,
+  checkOverdueRepayments,
+  getUsers,
+  rejectLoan,
+  updateUserStatus,
+} from "../api/admin.api";
+
+/**
+ * List admin users with caching + keepPreviousData for smooth paging.
+ * @param {{ page?: number, pageSize?: number, search?: string, sortBy?: string, sortDir?: "asc"|"desc" }} q
+ */
+export function useAdminUsers(q) {
+  return useQuery({
+    queryKey: ["admin-users", q],
+    queryFn: () => getUsers(q),
+    keepPreviousData: true,
+  });
+}
+
+/**
+ * Update user status and invalidate the users list.
+ * Call: mutate({ id, status })
+ */
+export function useUpdateUserStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }) => updateUserStatus(id, status),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+  });
+}
+
+/** Approve a loan by id. Call: mutate(loanId) */
+export function useApproveLoan() {
+  return useMutation({
+    mutationFn: (loanId) => approveLoan(loanId),
+  });
+}
+
+/** Reject a loan with reason. Call: mutate({ loanId, reason }) */
+export function useRejectLoan() {
+  return useMutation({
+    mutationFn: ({ loanId, reason }) => rejectLoan(loanId, reason),
+  });
+}
+
+/** Run overdue repayment check. Call: mutate() */
+export function useCheckOverdueRepayments() {
+  return useMutation({
+    mutationFn: () => checkOverdueRepayments(),
+  });
+}

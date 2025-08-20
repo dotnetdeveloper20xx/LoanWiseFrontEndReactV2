@@ -11,6 +11,10 @@ const Me = lazy(() => import("../features/auth/pages/MePage"));
 const Notifications = lazy(() => import("../features/notifications/pages/NotificationsPage"));
 const OpenLoans = lazy(() => import("../features/loans/pages/OpenLoansPage"));
 
+// Admin pages (new)
+const AdminUsersPage = lazy(() => import("../features/admin/pages/AdminUsersPage"));
+const AdminMaintenancePage = lazy(() => import("../features/admin/pages/AdminMaintenancePage"));
+
 // Small Suspense helper so each route gets a fallback
 const S = ({ children }: { children: React.ReactNode }) => (
   <Suspense fallback={<div className="p-4">Loading…</div>}>{children}</Suspense>
@@ -79,12 +83,34 @@ export const router = createBrowserRouter([
       {
         element: <ProtectedRoute roles={["Lender", "Admin"]} />,
         children: [
-          // IMPORTANT: keep this in sync with your NavBar path
           {
             path: "/open-loans",
             element: (
               <S>
                 <OpenLoans />
+              </S>
+            ),
+          },
+        ],
+      },
+
+      // Role-gated: Admin only
+      {
+        element: <ProtectedRoute roles={["Admin"]} />,
+        children: [
+          {
+            path: "/admin/users",
+            element: (
+              <S>
+                <AdminUsersPage />
+              </S>
+            ),
+          },
+          {
+            path: "/admin/maintenance",
+            element: (
+              <S>
+                <AdminMaintenancePage />
               </S>
             ),
           },

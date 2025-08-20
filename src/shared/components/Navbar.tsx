@@ -59,6 +59,24 @@ export default function NavBar() {
                 >
                   Me
                 </NavLink>
+
+                {/* Admin menu */}
+                {role === "Admin" && (
+                  <>
+                    <NavLink
+                      to="/admin/users"
+                      className={({ isActive }) => `${linkBase} ${isActive ? active : inactive}`}
+                    >
+                      Admin: Users
+                    </NavLink>
+                    <NavLink
+                      to="/admin/maintenance"
+                      className={({ isActive }) => `${linkBase} ${isActive ? active : inactive}`}
+                    >
+                      Admin: Maintenance
+                    </NavLink>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -137,6 +155,25 @@ export default function NavBar() {
             >
               Me
             </NavLink>
+
+            {role === "Admin" && (
+              <>
+                <NavLink
+                  to="/admin/users"
+                  onClick={() => setOpen(false)}
+                  className={({ isActive }) => `${linkBase} block ${isActive ? active : inactive}`}
+                >
+                  Admin: Users
+                </NavLink>
+                <NavLink
+                  to="/admin/maintenance"
+                  onClick={() => setOpen(false)}
+                  className={({ isActive }) => `${linkBase} block ${isActive ? active : inactive}`}
+                >
+                  Admin: Maintenance
+                </NavLink>
+              </>
+            )}
 
             <div className="pt-2 flex items-center justify-between">
               {profile ? (

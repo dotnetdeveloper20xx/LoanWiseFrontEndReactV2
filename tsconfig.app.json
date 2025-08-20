@@ -1,27 +1,41 @@
 {
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+
+    /* Targets & libs */
     "target": "ES2022",
-    "useDefineForClassFields": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
+
+    /* Modules & bundling */
     "module": "ESNext",
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "noEmit": true,
+
+    /* JSX / React */
+    "jsx": "react-jsx",
+    "types": ["vite/client"],
+
+    /* Interop & extras */
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
     "skipLibCheck": true,
 
-    /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
+    /* TS 5+ module syntax settings (safe defaults) */
+    "allowImportingTsExtensions": false,
+    "verbatimModuleSyntax": false,
     "moduleDetection": "force",
-    "noEmit": true,
-    "jsx": "react-jsx",
+    "useDefineForClassFields": true,
 
-    /* Linting */
+    /* Strictness & linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
+
+    /* NOTE: removed "erasableSyntaxOnly": it can cause TS to keep type tokens at runtime in some setups */
   },
-  "include": ["src"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules", "dist"]
 }

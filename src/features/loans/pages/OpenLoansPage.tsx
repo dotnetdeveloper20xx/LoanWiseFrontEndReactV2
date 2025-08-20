@@ -1,9 +1,25 @@
 import { useQuery } from "@tanstack/react-query";
-
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../../app/store";
 import { getOpenLoans, type LoanSummary } from "../api/loans.api";
+import { useApproveLoan, useRejectLoan } from "../../admin/hooks/useAdmin";
 
-function LoanCard({ loan }: { loan: LoanSummary }) {
+function LoanCard({
+  loan,
+  isAdmin,
+  onApprove,
+  onReject,
+  pending,
+}: {
+  loan: LoanSummary;
+  isAdmin: boolean;
+  onApprove: (loanId: string) => void;
+  onReject: (loanId: string, reason: string) => void;
+  pending: boolean;
+}) {
+  const [reason, setReason] = useState("");
+
   const progress = useMemo(() => {
     if (!loan.amount) return 0;
     return Math.min(100, Math.round((loan.fundedAmount / loan.amount) * 100));
@@ -46,20 +62,61 @@ function LoanCard({ loan }: { loan: LoanSummary }) {
         <div className="text-xs mt-1 text-gray-500 dark:text-gray-300">{progress}% funded</div>
       </div>
 
-      {/* Placeholder: a Fund button would call POST /api/fundings/{loanId} */}
+      {/* Lender action (coming soon) */}
       <button className="btn w-full" disabled>
         Fund (coming soon)
       </button>
+
+      {/* Admin actions */}
+      {isAdmin && (
+        <div className="mt-3 space-y-2 border-t pt-3">
+          <div className="flex gap-2">
+            <button
+              className="btn btn-success"
+              onClick={() => onApprove(loan.loanId)}
+              disabled={pending}
+            >
+              {pending ? "Approving…" : "Approve"}
+            </button>
+            <input
+              className="border rounded px-2 py-1 flex-1"
+              placeholder="Rejection reason"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+            />
+            <button
+              className="btn btn-error"
+              onClick={() => onReject(loan.loanId, reason)}
+              disabled={!reason || pending}
+            >
+              {pending ? "Rejecting…" : "Reject"}
+            </button>
+          </div>
+          <p className="text-xs text-gray-500">
+            Approve: <code>POST /api/admin/loans/{loan.loanId}/approve</code>, Reject with reason:
+            <code> POST /api/admin/loans/{loan.loanId}/reject</code>
+          </p>
+        </div>
+      )}
     </div>
   );
 }
 
 export default function OpenLoansPage() {
+  // role from Redux
+  const role = useSelector((s: RootState) => s.auth.profile?.role ?? null);
+  const isAdmin = role === "Admin";
+
+  // data
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["open-loans"],
     queryFn: getOpenLoans,
-    staleTime: 60_000, // 1 minute
+    staleTime: 60_000,
   });
+
+  // admin mutations
+  const approve = useApproveLoan();
+  const reject = useRejectLoan();
 
   if (isLoading) return <div>Loading open loans…</div>;
   if (isError) {
@@ -92,7 +149,14 @@ export default function OpenLoansPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {loans.map((loan) => (
-            <LoanCard key={loan.loanId} loan={loan} />
+            <LoanCard
+              key={loan.loanId}
+              loan={loan}
+              isAdmin={isAdmin}
+              pending={approve.isPending || reject.isPending}
+              onApprove={(loanId) => approve.mutate(loanId)}
+              onReject={(loanId, reason) => reject.mutate({ loanId, reason })}
+            />
           ))}
         </div>
       )}
