@@ -10,7 +10,7 @@ import {
 
 /**
  * List admin users with caching + keepPreviousData for smooth paging.
- * @param {{ page?: number, pageSize?: number, search?: string, sortBy?: string, sortDir?: "asc"|"desc" }} q
+ * @param {{ page?: number, pageSize?: number, search?: string, role?: string, isActive?: boolean|null, sortBy?: string, sortDir?: "asc"|"desc" }} q
  */
 export function useAdminUsers(q) {
   return useQuery({
@@ -22,12 +22,12 @@ export function useAdminUsers(q) {
 
 /**
  * Update user status and invalidate the users list.
- * Call: mutate({ id, status })
+ * Call: mutate({ id, isActive })
  */
 export function useUpdateUserStatus() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, status }) => updateUserStatus(id, status),
+    mutationFn: ({ id, isActive }) => updateUserStatus(id, isActive),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-users"] });
     },

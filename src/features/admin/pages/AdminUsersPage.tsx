@@ -1,17 +1,21 @@
 // src/features/admin/pages/AdminUsersPage.tsx
 import { useMemo, useState } from "react";
 import { useAdminUsers, useUpdateUserStatus } from "../hooks/useAdmin";
-import type { GetUsersQuery, UserStatus } from "../api/admin.api";
+import type { GetUsersQuery } from "../api/admin.api";
 
-const STATUS: UserStatus[] = ["Active", "Suspended", "Pending", "Disabled"];
+const STATUS_LABELS = {
+  active: "Active",
+  inactive: "Inactive",
+} as const;
 
 export default function AdminUsersPage() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(25);
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortBy, setSortBy] = useState<GetUsersQuery["sortBy"]>("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
+  // IMPORTANT: isActive omitted => include ALL (active + inactive)
   const query = useMemo<GetUsersQuery>(
     () => ({ page, pageSize, search, sortBy, sortDir }),
     [page, pageSize, search, sortBy, sortDir]
@@ -43,7 +47,7 @@ export default function AdminUsersPage() {
         <select
           className="border rounded px-3 py-2"
           value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
+          onChange={(e) => setSortBy(e.target.value as GetUsersQuery["sortBy"])}
         >
           <option value="createdAt">Created</option>
           <option value="fullName">Name</option>
@@ -80,35 +84,43 @@ export default function AdminUsersPage() {
             </tr>
           </thead>
           <tbody>
-            {items.map((u) => (
-              <tr key={u.id} className="border-t">
-                <td className="px-3 py-2">{u.fullName}</td>
-                <td className="px-3 py-2">{u.email}</td>
-                <td className="px-3 py-2 text-center">{u.role}</td>
-                <td className="px-3 py-2 text-center">
-                  <span className="inline-block rounded px-2 py-1 bg-gray-200">{u.status}</span>
-                </td>
-                <td className="px-3 py-2 text-center">
-                  {new Date(u.createdAtUtc).toLocaleString()}
-                </td>
-                <td className="px-3 py-2 text-center">
-                  <select
-                    className="border rounded px-2 py-1"
-                    value={u.status}
-                    onChange={(e) =>
-                      update.mutate({ id: u.id, status: e.target.value as UserStatus })
-                    }
-                    disabled={update.isPending}
-                  >
-                    {STATUS.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-              </tr>
-            ))}
+            {items.map((u) => {
+              const isActive = !!u.isActive;
+              const statusLabel = isActive ? STATUS_LABELS.active : STATUS_LABELS.inactive;
+              return (
+                <tr key={u.id} className="border-t">
+                  <td className="px-3 py-2">{u.fullName}</td>
+                  <td className="px-3 py-2">{u.email}</td>
+                  <td className="px-3 py-2 text-center">{u.role}</td>
+                  <td className="px-3 py-2 text-center">
+                    <span
+                      className={`inline-block rounded px-2 py-1 ${
+                        isActive ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-700"
+                      }`}
+                    >
+                      {statusLabel}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    {u.createdAtUtc ? new Date(u.createdAtUtc).toLocaleString() : "-"}
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    <select
+                      className="border rounded px-2 py-1"
+                      value={isActive ? "Active" : "Inactive"}
+                      onChange={(e) => {
+                        const next = e.target.value === "Active";
+                        update.mutate({ id: u.id, isActive: next });
+                      }}
+                      disabled={update.isPending}
+                    >
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                    </select>
+                  </td>
+                </tr>
+              );
+            })}
             {items.length === 0 && !isLoading && (
               <tr>
                 <td className="px-3 py-6 text-center text-gray-500" colSpan={6}>
