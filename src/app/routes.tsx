@@ -4,18 +4,21 @@ import ProtectedRoute from "../shared/components/ProtectedRoute";
 import RootLayout from "../app/RootLayout";
 
 // Pages (lazy)
-const Home = lazy(() => import("../features/loans/pages/OpenLoansPage")); // keep as your home
+const Home = lazy(() => import("../features/loans/pages/OpenLoansPage"));
 const Login = lazy(() => import("../features/auth/pages/LoginPage"));
 const Register = lazy(() => import("../features/auth/pages/RegisterPage"));
 const Me = lazy(() => import("../features/auth/pages/MePage"));
 const Notifications = lazy(() => import("../features/notifications/pages/NotificationsPage"));
 const OpenLoans = lazy(() => import("../features/loans/pages/OpenLoansPage"));
 
-// Admin pages (new)
+// Admin pages
 const AdminUsersPage = lazy(() => import("../features/admin/pages/AdminUsersPage"));
 const AdminMaintenancePage = lazy(() => import("../features/admin/pages/AdminMaintenancePage"));
 
-// Small Suspense helper so each route gets a fallback
+// Borrower pages (NEW)
+const ApplyLoanPage = lazy(() => import("../features/loans/pages/ApplyLoanPage"));
+const BorrowerDashboardPage = lazy(() => import("../features/loans/pages/BorrowerDashboardPage"));
+
 const S = ({ children }: { children: React.ReactNode }) => (
   <Suspense fallback={<div className="p-4">Loading…</div>}>{children}</Suspense>
 );
@@ -24,9 +27,9 @@ function NotFound() {
   return <div className="p-6">Sorry, nothing at this address.</div>;
 }
 
-export const router = createBrowserRouter([
+export const routers = createBrowserRouter([
   {
-    element: <RootLayout />, // <Navbar/> is inside, has Router context
+    element: <RootLayout />,
     errorElement: <NotFound />,
     children: [
       {
@@ -79,7 +82,30 @@ export const router = createBrowserRouter([
         ],
       },
 
-      // Role-gated: Lender/Admin
+      // Borrower only
+      {
+        element: <ProtectedRoute roles={["Borrower"]} />,
+        children: [
+          {
+            path: "/borrower/apply",
+            element: (
+              <S>
+                <ApplyLoanPage />
+              </S>
+            ),
+          },
+          {
+            path: "/dashboard",
+            element: (
+              <S>
+                <BorrowerDashboardPage />
+              </S>
+            ),
+          },
+        ],
+      },
+
+      // Lender/Admin
       {
         element: <ProtectedRoute roles={["Lender", "Admin"]} />,
         children: [
@@ -94,7 +120,7 @@ export const router = createBrowserRouter([
         ],
       },
 
-      // Role-gated: Admin only
+      // Admin only
       {
         element: <ProtectedRoute roles={["Admin"]} />,
         children: [
@@ -120,4 +146,4 @@ export const router = createBrowserRouter([
   },
 ]);
 
-export default router;
+export default routers;

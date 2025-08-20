@@ -39,6 +39,25 @@ export default function NavBar() {
             {/* Desktop links */}
             {isAuthed && (
               <div className="hidden md:flex items-center gap-1">
+                {/* Borrower-only */}
+                {role === "Borrower" && (
+                  <>
+                    <NavLink
+                      to="/borrower/apply"
+                      className={({ isActive }) => `${linkBase} ${isActive ? active : inactive}`}
+                    >
+                      Apply Loan
+                    </NavLink>
+                    <NavLink
+                      to="/dashboard"
+                      className={({ isActive }) => `${linkBase} ${isActive ? active : inactive}`}
+                    >
+                      Dashboard
+                    </NavLink>
+                  </>
+                )}
+
+                {/* Lender/Admin shared */}
                 {(role === "Lender" || role === "Admin") && (
                   <NavLink
                     to="/open-loans"
@@ -47,6 +66,8 @@ export default function NavBar() {
                     Open Loans
                   </NavLink>
                 )}
+
+                {/* Common */}
                 <NavLink
                   to="/notifications"
                   className={({ isActive }) => `${linkBase} ${isActive ? active : inactive}`}
@@ -132,6 +153,26 @@ export default function NavBar() {
       {isAuthed && open && (
         <div className="md:hidden border-t border-gray-700">
           <div className="space-y-1 px-4 py-3">
+            {/* Borrower-only */}
+            {role === "Borrower" && (
+              <>
+                <NavLink
+                  to="/borrower/apply"
+                  onClick={() => setOpen(false)}
+                  className={({ isActive }) => `${linkBase} block ${isActive ? active : inactive}`}
+                >
+                  Apply Loan
+                </NavLink>
+                <NavLink
+                  to="/dashboard"
+                  onClick={() => setOpen(false)}
+                  className={({ isActive }) => `${linkBase} block ${isActive ? active : inactive}`}
+                >
+                  Dashboard
+                </NavLink>
+              </>
+            )}
+
             {(role === "Lender" || role === "Admin") && (
               <NavLink
                 to="/open-loans"
@@ -141,6 +182,7 @@ export default function NavBar() {
                 Open Loans
               </NavLink>
             )}
+
             <NavLink
               to="/notifications"
               onClick={() => setOpen(false)}
