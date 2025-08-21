@@ -141,7 +141,7 @@ MIT — feel free to use for reference or learning.
 
 ---
 
-#Here’s a clean, role‑based snapshot of what the app does today, and what’s still on the runway. Use it as your “Done / To‑Do” board.
+# Here’s a clean, role‑based snapshot of what the app does today, and what’s still on the runway. Use it as your “Done / To‑Do” board.
 
 ---
 
