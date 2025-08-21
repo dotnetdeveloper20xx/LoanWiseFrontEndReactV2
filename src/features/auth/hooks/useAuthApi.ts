@@ -1,13 +1,11 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDispatch } from "react-redux";
 
 import type { Role, Profile } from "../model/auth.types";
 import { loginSucceeded, setProfile } from "../model/auth.slice";
 import { loginUser, registerUser, getMe } from "../api/auth.api";
 
-/**
- * Register (Borrower/Lender)
- */
+/** Register (Borrower/Lender) */
 export function useRegister() {
   return useMutation({
     mutationFn: (p: { fullName: string; email: string; password: string; role: Role }) =>
@@ -17,23 +15,26 @@ export function useRegister() {
 
 /**
  * Login:
- * - Supports login responses where `data` is a raw JWT string or an object.
- * - If profile is missing in login response, fetch `/api/users/me` immediately after.
+ * - Handles token-only or token+profile shapes
+ * - Clears all caches to avoid stale identity
+ * - Fetches /me right away and mirrors into Redux
  */
 export function useLogin() {
   const dispatch = useDispatch();
+  const qc = useQueryClient();
 
   return useMutation({
     mutationFn: (p: { email: string; password: string }) => loginUser(p.email, p.password),
     onSuccess: async (data) => {
-      // Persist tokens immediately (slice also writes to localStorage)
+      // Make sure any old session data is gone
+      await qc.clear();
+
       dispatch(
         loginSucceeded({
           token: data.token,
           refreshToken: data.refreshToken ?? "",
           tokenExpiresAtUtc: data.tokenExpiresAtUtc ?? "",
           refreshTokenExpiresAtUtc: data.refreshTokenExpiresAtUtc ?? "",
-          // temporary; ensure shape is valid for the slice
           profile: (data.profile ?? {
             id: "",
             fullName: "",
@@ -43,22 +44,20 @@ export function useLogin() {
         })
       );
 
-      // If server didn’t include profile in the login payload, fetch it
-      if (!data.profile) {
-        try {
-          const me = await getMe();
-          dispatch(setProfile(me));
-        } catch {
-          // ignore; user remains logged in and UI can call useMe elsewhere
-        }
+      // If server didn’t include profile, fetch it now
+      try {
+        const me = await getMe();
+        dispatch(setProfile(me));
+        // seed query cache too
+        qc.setQueryData(["me"], me);
+      } catch {
+        /* ignore; profile will resolve on first useMe */
       }
     },
   });
 }
 
-/**
- * /users/me → cache + mirror in Redux for easy access across the app
- */
+/** /users/me → cache + mirror in Redux */
 export function useMe() {
   const dispatch = useDispatch();
 

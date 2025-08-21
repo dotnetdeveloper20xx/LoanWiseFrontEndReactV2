@@ -36,10 +36,9 @@ export default function NavBar() {
               LoanWise
             </Link>
 
-            {/* Desktop links */}
             {isAuthed && (
               <div className="hidden md:flex items-center gap-1">
-                {/* Borrower-only */}
+                {/* Borrower */}
                 {role === "Borrower" && (
                   <>
                     <NavLink
@@ -57,14 +56,52 @@ export default function NavBar() {
                   </>
                 )}
 
-                {/* Lender/Admin shared */}
-                {(role === "Lender" || role === "Admin") && (
-                  <NavLink
-                    to="/open-loans"
-                    className={({ isActive }) => `${linkBase} ${isActive ? active : inactive}`}
-                  >
-                    Open Loans
-                  </NavLink>
+                {/* Lender */}
+                {role === "Lender" && (
+                  <>
+                    <NavLink
+                      to="/open-loans"
+                      className={({ isActive }) => `${linkBase} ${isActive ? active : inactive}`}
+                    >
+                      Open Loans
+                    </NavLink>
+                    <NavLink
+                      to="/lender/dashboard"
+                      className={({ isActive }) => `${linkBase} ${isActive ? active : inactive}`}
+                    >
+                      Lender Dashboard
+                    </NavLink>
+                  </>
+                )}
+
+                {/* Admin */}
+                {role === "Admin" && (
+                  <>
+                    <NavLink
+                      to="/open-loans"
+                      className={({ isActive }) => `${linkBase} ${isActive ? active : inactive}`}
+                    >
+                      Open Loans
+                    </NavLink>
+                    <NavLink
+                      to="/admin/all-loans"
+                      className={({ isActive }) => `${linkBase} ${isActive ? active : inactive}`}
+                    >
+                      Admin: All Loans
+                    </NavLink>
+                    <NavLink
+                      to="/admin/users"
+                      className={({ isActive }) => `${linkBase} ${isActive ? active : inactive}`}
+                    >
+                      Admin: Users
+                    </NavLink>
+                    <NavLink
+                      to="/admin/maintenance"
+                      className={({ isActive }) => `${linkBase} ${isActive ? active : inactive}`}
+                    >
+                      Admin: Maintenance
+                    </NavLink>
+                  </>
                 )}
 
                 {/* Common */}
@@ -80,24 +117,6 @@ export default function NavBar() {
                 >
                   Me
                 </NavLink>
-
-                {/* Admin menu */}
-                {role === "Admin" && (
-                  <>
-                    <NavLink
-                      to="/admin/users"
-                      className={({ isActive }) => `${linkBase} ${isActive ? active : inactive}`}
-                    >
-                      Admin: Users
-                    </NavLink>
-                    <NavLink
-                      to="/admin/maintenance"
-                      className={({ isActive }) => `${linkBase} ${isActive ? active : inactive}`}
-                    >
-                      Admin: Maintenance
-                    </NavLink>
-                  </>
-                )}
               </div>
             )}
           </div>
@@ -153,7 +172,6 @@ export default function NavBar() {
       {isAuthed && open && (
         <div className="md:hidden border-t border-gray-700">
           <div className="space-y-1 px-4 py-3">
-            {/* Borrower-only */}
             {role === "Borrower" && (
               <>
                 <NavLink
@@ -173,33 +191,41 @@ export default function NavBar() {
               </>
             )}
 
-            {(role === "Lender" || role === "Admin") && (
-              <NavLink
-                to="/open-loans"
-                onClick={() => setOpen(false)}
-                className={({ isActive }) => `${linkBase} block ${isActive ? active : inactive}`}
-              >
-                Open Loans
-              </NavLink>
+            {role === "Lender" && (
+              <>
+                <NavLink
+                  to="/open-loans"
+                  onClick={() => setOpen(false)}
+                  className={({ isActive }) => `${linkBase} block ${isActive ? active : inactive}`}
+                >
+                  Open Loans
+                </NavLink>
+                <NavLink
+                  to="/lender/dashboard"
+                  onClick={() => setOpen(false)}
+                  className={({ isActive }) => `${linkBase} block ${isActive ? active : inactive}`}
+                >
+                  Lender Dashboard
+                </NavLink>
+              </>
             )}
-
-            <NavLink
-              to="/notifications"
-              onClick={() => setOpen(false)}
-              className={({ isActive }) => `${linkBase} block ${isActive ? active : inactive}`}
-            >
-              Notifications
-            </NavLink>
-            <NavLink
-              to="/me"
-              onClick={() => setOpen(false)}
-              className={({ isActive }) => `${linkBase} block ${isActive ? active : inactive}`}
-            >
-              Me
-            </NavLink>
 
             {role === "Admin" && (
               <>
+                <NavLink
+                  to="/open-loans"
+                  onClick={() => setOpen(false)}
+                  className={({ isActive }) => `${linkBase} block ${isActive ? active : inactive}`}
+                >
+                  Open Loans
+                </NavLink>
+                <NavLink
+                  to="/admin/all-loans"
+                  onClick={() => setOpen(false)}
+                  className={({ isActive }) => `${linkBase} block ${isActive ? active : inactive}`}
+                >
+                  Admin: All Loans
+                </NavLink>
                 <NavLink
                   to="/admin/users"
                   onClick={() => setOpen(false)}
@@ -216,6 +242,21 @@ export default function NavBar() {
                 </NavLink>
               </>
             )}
+
+            <NavLink
+              to="/notifications"
+              onClick={() => setOpen(false)}
+              className={({ isActive }) => `${linkBase} block ${isActive ? active : inactive}`}
+            >
+              Notifications
+            </NavLink>
+            <NavLink
+              to="/me"
+              onClick={() => setOpen(false)}
+              className={({ isActive }) => `${linkBase} block ${isActive ? active : inactive}`}
+            >
+              Me
+            </NavLink>
 
             <div className="pt-2 flex items-center justify-between">
               {profile ? (

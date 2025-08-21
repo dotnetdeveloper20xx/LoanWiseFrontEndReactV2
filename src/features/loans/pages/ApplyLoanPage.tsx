@@ -1,14 +1,28 @@
 // src/features/loans/pages/ApplyLoanPage.tsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { applyLoan } from "../api/loans.api";
+import { getLoanPurposes } from "../../metadata/api/metadata.api";
 
 export default function ApplyLoanPage() {
   const [amount, setAmount] = useState<number>(10000);
   const [duration, setDuration] = useState<number>(12);
-  const [purpose, setPurpose] = useState<string>("HomeImprovement");
+  const [purpose, setPurpose] = useState<string>("");
+  const [purposes, setPurposes] = useState<Array<{ name: string; value: string | number }>>([]);
   const [isSubmitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const p = await getLoanPurposes();
+        setPurposes(p);
+        if (!purpose && p.length) setPurpose(String(p[0].name));
+      } catch {
+        setPurposes([]);
+      }
+    })();
+  }, []); // load once
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,14 +73,20 @@ export default function ApplyLoanPage() {
 
         <label className="block">
           <span className="text-sm">Purpose</span>
-          <input
+          <select
             className="border rounded w-full px-3 py-2"
             value={purpose}
             onChange={(e) => setPurpose(e.target.value)}
-          />
+          >
+            {purposes.map((p) => (
+              <option key={`${p.value}`} value={p.name}>
+                {p.name}
+              </option>
+            ))}
+          </select>
         </label>
 
-        <button className="btn w-full" disabled={isSubmitting}>
+        <button className="btn w-full" disabled={isSubmitting || !purpose}>
           {isSubmitting ? "Submitting…" : "Submit Application"}
         </button>
 

@@ -3,7 +3,7 @@ import { createBrowserRouter } from "react-router-dom";
 import ProtectedRoute from "../shared/components/ProtectedRoute";
 import RootLayout from "../app/RootLayout";
 
-// Pages (lazy)
+// Pages
 const Home = lazy(() => import("../features/loans/pages/OpenLoansPage"));
 const Login = lazy(() => import("../features/auth/pages/LoginPage"));
 const Register = lazy(() => import("../features/auth/pages/RegisterPage"));
@@ -11,13 +11,25 @@ const Me = lazy(() => import("../features/auth/pages/MePage"));
 const Notifications = lazy(() => import("../features/notifications/pages/NotificationsPage"));
 const OpenLoans = lazy(() => import("../features/loans/pages/OpenLoansPage"));
 
-// Admin pages
+// Admin
 const AdminUsersPage = lazy(() => import("../features/admin/pages/AdminUsersPage"));
 const AdminMaintenancePage = lazy(() => import("../features/admin/pages/AdminMaintenancePage"));
+const AdminAllLoansPage = lazy(() => import("../features/admin/pages/AdminAllLoansPage")); // NEW
 
-// Borrower pages (NEW)
+// Borrower
 const ApplyLoanPage = lazy(() => import("../features/loans/pages/ApplyLoanPage"));
 const BorrowerDashboardPage = lazy(() => import("../features/loans/pages/BorrowerDashboardPage"));
+
+// Lender
+const LenderDashboardPage = lazy(() => import("../features/lenders/pages/LenderDashboardPage"));
+const LenderPortfolioPage = lazy(() => import("../features/lenders/pages/LenderPortfolioPage")); // NEW
+const LenderTransactionsPage = lazy(
+  () => import("../features/lenders/pages/LenderTransactionsPage")
+); // NEW
+
+// Repayments & Borrower risk (shared pages)
+const LoanRepaymentsPage = lazy(() => import("../features/loans/pages/LoanRepaymentsPage")); // NEW
+const BorrowerRiskPage = lazy(() => import("../features/borrowers/pages/BorrowerRiskPage")); // NEW (optional)
 
 const S = ({ children }: { children: React.ReactNode }) => (
   <Suspense fallback={<div className="p-4">Loading…</div>}>{children}</Suspense>
@@ -82,7 +94,7 @@ export const routers = createBrowserRouter([
         ],
       },
 
-      // Borrower only
+      // Borrower
       {
         element: <ProtectedRoute roles={["Borrower"]} />,
         children: [
@@ -102,10 +114,19 @@ export const routers = createBrowserRouter([
               </S>
             ),
           },
+          // Shared repayments page for borrower (also exposed below for Admin)
+          {
+            path: "/loans/:loanId/repayments",
+            element: (
+              <S>
+                <LoanRepaymentsPage />
+              </S>
+            ),
+          },
         ],
       },
 
-      // Lender/Admin
+      // Lender/Admin -> Open Loans
       {
         element: <ProtectedRoute roles={["Lender", "Admin"]} />,
         children: [
@@ -120,10 +141,49 @@ export const routers = createBrowserRouter([
         ],
       },
 
-      // Admin only
+      // Lender-only routes
+      {
+        element: <ProtectedRoute roles={["Lender"]} />,
+        children: [
+          {
+            path: "/lender/dashboard",
+            element: (
+              <S>
+                <LenderDashboardPage />
+              </S>
+            ),
+          },
+          {
+            path: "/lender/portfolio",
+            element: (
+              <S>
+                <LenderPortfolioPage />
+              </S>
+            ),
+          },
+          {
+            path: "/lender/transactions",
+            element: (
+              <S>
+                <LenderTransactionsPage />
+              </S>
+            ),
+          },
+        ],
+      },
+
+      // Admin-only routes
       {
         element: <ProtectedRoute roles={["Admin"]} />,
         children: [
+          {
+            path: "/admin/all-loans",
+            element: (
+              <S>
+                <AdminAllLoansPage />
+              </S>
+            ),
+          },
           {
             path: "/admin/users",
             element: (
@@ -137,6 +197,30 @@ export const routers = createBrowserRouter([
             element: (
               <S>
                 <AdminMaintenancePage />
+              </S>
+            ),
+          },
+          // Shared repayments page for admin (mirrors borrower route)
+          {
+            path: "/loans/:loanId/repayments",
+            element: (
+              <S>
+                <LoanRepaymentsPage />
+              </S>
+            ),
+          },
+        ],
+      },
+
+      // Optional: Borrower risk view for all three roles
+      {
+        element: <ProtectedRoute roles={["Admin", "Borrower", "Lender"]} />,
+        children: [
+          {
+            path: "/borrowers/:borrowerId/risk",
+            element: (
+              <S>
+                <BorrowerRiskPage />
               </S>
             ),
           },

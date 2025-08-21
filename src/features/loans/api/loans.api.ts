@@ -6,8 +6,8 @@ export interface LoanSummary {
   amount: number;
   fundedAmount: number;
   durationInMonths: number;
-  purpose: string; // e.g., "HomeImprovement"
-  status: string; // e.g., "Open"
+  purpose: string;
+  status: string;
 }
 
 // GET /api/loans/open → ApiResponse<LoanSummary[]>
@@ -31,5 +31,17 @@ export async function getBorrowerHistory(params: { page?: number; pageSize?: num
   const res = await api.get("/api/loans/borrowers/history", {
     params: { page: params.page ?? 1, pageSize: params.pageSize ?? 25 },
   });
+  return res.data?.data ?? res.data;
+}
+
+/** POST /api/loans/{loanId}/disburse → ApiResponse<Guid> */
+export async function disburseLoan(loanId: string) {
+  const res = await api.post(`/api/loans/${loanId}/disburse`);
+  return res.data?.data ?? res.data;
+}
+
+/** GET /api/loans/{loanId}/repayments → ApiResponse<Repayment[]> */
+export async function getRepayments(loanId: string) {
+  const res = await api.get(`/api/loans/${loanId}/repayments`);
   return res.data?.data ?? res.data;
 }

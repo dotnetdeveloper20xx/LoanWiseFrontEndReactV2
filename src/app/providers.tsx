@@ -5,11 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./queryClient";
 import { useEffect, type ReactNode } from "react";
 
-import {
-  hydrateFromStorage,
-  tokensRefreshed,
-  logout,
-} from "../features/auth/model/auth.slice";
+import { hydrateFromStorage, tokensRefreshed, logout } from "../features/auth/model/auth.slice";
 import { attachAuthToken, setupAuthRefresh } from "../shared/lib/axios";
 
 /**
@@ -28,11 +24,15 @@ export function AppProviders({ children }: { children: ReactNode }) {
     setupAuthRefresh({
       getAccessToken: getToken,
       getRefreshToken: getRefresh,
-      onTokens: (toks) => {
+      onTokens: async (toks) => {
+        // If tokens went missing/invalid => logout + clear cache
         if (!toks) {
+          await queryClient.clear();
           store.dispatch(logout());
           return;
         }
+
+        // Tokens refreshed => update Redux and invalidate the "me" query
         store.dispatch(
           tokensRefreshed({
             token: toks.token,
@@ -41,6 +41,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
             refreshTokenExpiresAtUtc: toks.refreshTokenExpiresAtUtc ?? null,
           })
         );
+
+        // Make sure any cached identity/state is reloaded
+        queryClient.invalidateQueries({ queryKey: ["me"] });
       },
     });
   }, []);

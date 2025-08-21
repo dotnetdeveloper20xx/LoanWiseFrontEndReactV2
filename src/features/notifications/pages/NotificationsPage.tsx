@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getMyNotifications, markNotificationRead, type NotificationItem } from "../api/notifications.api";
-
+import {
+  getMyNotifications,
+  markNotificationRead,
+  type NotificationItem,
+} from "../api/notifications.api";
 
 function NotificationCard({ n, onRead }: { n: NotificationItem; onRead: (id: string) => void }) {
   return (
@@ -37,10 +40,16 @@ export default function NotificationsPage() {
   const markRead = useMutation({
     mutationFn: (id: string) => markNotificationRead(id),
     onSuccess: () => {
-      // Refresh the list after marking as read
       qc.invalidateQueries({ queryKey: ["notifications", "me"] });
     },
   });
+
+  async function markAll() {
+    const items = notifQuery.data ?? [];
+    const unread = items.filter((n) => !n.isRead);
+    await Promise.all(unread.map((n) => markNotificationRead(n.id)));
+    qc.invalidateQueries({ queryKey: ["notifications", "me"] });
+  }
 
   if (notifQuery.isLoading) return <div>Loading notifications…</div>;
   if (notifQuery.isError) {
@@ -67,13 +76,20 @@ export default function NotificationsPage() {
     <section className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Notifications</h1>
-        <button
-          className="btn"
-          onClick={() => notifQuery.refetch()}
-          disabled={notifQuery.isFetching}
-        >
-          {notifQuery.isFetching ? "Refreshing…" : "Refresh"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            className="btn"
+            onClick={() => notifQuery.refetch()}
+            disabled={notifQuery.isFetching}
+          >
+            {notifQuery.isFetching ? "Refreshing…" : "Refresh"}
+          </button>
+          {items.some((n) => !n.isRead) && (
+            <button className="btn" onClick={markAll}>
+              Mark all read
+            </button>
+          )}
+        </div>
       </div>
 
       {items.length === 0 ? (

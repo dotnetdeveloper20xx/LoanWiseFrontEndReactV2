@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import type { RootState } from "../../../app/store";
 import { getOpenLoans, type LoanSummary } from "../api/loans.api";
 import { useApproveLoan, useRejectLoan } from "../../admin/hooks/useAdmin";
+import { fundLoan } from "../../funding/api/fundings.api";
 
 // ---- helpers ----
 const fmt = new Intl.NumberFormat("en-GB", {
@@ -19,18 +20,23 @@ const safeNumber = (n: unknown, fallback = 0) => {
 
 function LoanCard({
   loan,
-  isAdmin,
+  role,
   onApprove,
   onReject,
-  pending,
+  pendingAdmin,
+  onFund,
+  pendingFund,
 }: {
   loan: LoanSummary;
-  isAdmin: boolean;
+  role: string | null;
   onApprove: (loanId: string) => void;
   onReject: (loanId: string, reason: string) => void;
-  pending: boolean;
+  pendingAdmin: boolean;
+  onFund: (loanId: string, amount: number) => void;
+  pendingFund: boolean;
 }) {
   const [reason, setReason] = useState("");
+  const [amountToFund, setAmountToFund] = useState<number>(500);
 
   const amount = safeNumber(loan.amount);
   const funded = safeNumber(loan.fundedAmount);
@@ -42,6 +48,9 @@ function LoanCard({
     if (amount <= 0) return 0;
     return Math.min(100, Math.round((funded / amount) * 100));
   }, [amount, funded]);
+
+  const isAdmin = role === "Admin";
+  const isLender = role === "Lender";
 
   return (
     <div className="card p-5 space-y-2">
@@ -80,10 +89,27 @@ function LoanCard({
         <div className="text-xs mt-1 text-gray-500 dark:text-gray-300">{progress}% funded</div>
       </div>
 
-      {/* Lender action (coming soon) */}
-      <button className="btn w-full" disabled>
-        Fund (coming soon)
-      </button>
+      {/* Lender action */}
+      {isLender && (
+        <div className="mt-2 flex gap-2">
+          <input
+            className="border rounded px-2 py-1 w-32"
+            type="number"
+            min={100}
+            step={100}
+            value={amountToFund}
+            onChange={(e) => setAmountToFund(Number(e.target.value))}
+            placeholder="Amount"
+          />
+          <button
+            className="btn"
+            disabled={pendingFund || !amountToFund || amountToFund <= 0}
+            onClick={() => onFund(String(loan.loanId), amountToFund)}
+          >
+            {pendingFund ? "Funding…" : "Fund"}
+          </button>
+        </div>
+      )}
 
       {/* Admin actions */}
       {isAdmin && (
@@ -92,9 +118,9 @@ function LoanCard({
             <button
               className="btn btn-success"
               onClick={() => onApprove(String(loan.loanId))}
-              disabled={pending}
+              disabled={pendingAdmin}
             >
-              {pending ? "Approving…" : "Approve"}
+              {pendingAdmin ? "Approving…" : "Approve"}
             </button>
             <input
               className="border rounded px-2 py-1 flex-1"
@@ -105,9 +131,9 @@ function LoanCard({
             <button
               className="btn btn-error"
               onClick={() => onReject(String(loan.loanId), reason)}
-              disabled={!reason || pending}
+              disabled={!reason || pendingAdmin}
             >
-              {pending ? "Rejecting…" : "Reject"}
+              {pendingAdmin ? "Rejecting…" : "Reject"}
             </button>
           </div>
         </div>
@@ -118,16 +144,29 @@ function LoanCard({
 
 export default function OpenLoansPage() {
   const role = useSelector((s: RootState) => s.auth.profile?.role ?? null);
-  const isAdmin = role === "Admin";
 
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["open-loans"],
     queryFn: getOpenLoans,
-    staleTime: 60_000, // 1 minute
+    staleTime: 60_000,
   });
 
   const approve = useApproveLoan();
   const reject = useRejectLoan();
+
+  // simple inline banner for action feedback
+  const [banner, setBanner] = useState<{ kind: "success" | "error"; msg: string } | null>(null);
+
+  async function handleFund(loanId: string, amount: number) {
+    setBanner(null);
+    try {
+      await fundLoan(loanId, amount);
+      setBanner({ kind: "success", msg: "Funding applied." });
+      refetch();
+    } catch (e: any) {
+      setBanner({ kind: "error", msg: e?.message ?? "Funding failed." });
+    }
+  }
 
   if (isLoading) return <div>Loading open loans…</div>;
   if (isError) {
@@ -153,6 +192,16 @@ export default function OpenLoansPage() {
         </button>
       </div>
 
+      {banner && (
+        <div
+          className={`p-3 rounded ${
+            banner.kind === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+          }`}
+        >
+          {banner.msg}
+        </div>
+      )}
+
       {loans.length === 0 ? (
         <div className="card p-6 text-sm text-gray-600 dark:text-gray-300">
           No open loans right now.
@@ -163,10 +212,34 @@ export default function OpenLoansPage() {
             <LoanCard
               key={String(loan.loanId)}
               loan={loan}
-              isAdmin={isAdmin}
-              pending={approve.isPending || reject.isPending}
-              onApprove={(loanId) => approve.mutate(loanId)}
-              onReject={(loanId, reason) => reject.mutate({ loanId, reason })}
+              role={role}
+              pendingAdmin={approve.isPending || reject.isPending}
+              onApprove={(loanId) => {
+                setBanner(null);
+                approve.mutate(loanId, {
+                  onSuccess: () => {
+                    setBanner({ kind: "success", msg: "Loan approved." });
+                    refetch();
+                  },
+                  onError: (e: any) =>
+                    setBanner({ kind: "error", msg: e?.message ?? "Approve failed." }),
+                });
+              }}
+              onReject={(loanId, reason) =>
+                reject.mutate(
+                  { loanId, reason },
+                  {
+                    onSuccess: () => {
+                      setBanner({ kind: "success", msg: "Loan rejected." });
+                      refetch();
+                    },
+                    onError: (e: any) =>
+                      setBanner({ kind: "error", msg: e?.message ?? "Reject failed." }),
+                  }
+                )
+              }
+              onFund={handleFund}
+              pendingFund={false}
             />
           ))}
         </div>
