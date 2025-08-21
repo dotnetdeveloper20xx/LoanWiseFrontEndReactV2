@@ -166,7 +166,7 @@ MIT — feel free to use for reference or learning.
   * `GET /api/loans/{loanId}/repayments`.
 * **Make a repayment**
 
-  * Pay from the repayments view (visible for unpaid installments).
+  * Pay from the repayments view (visible for unpaid instalments).
   * `POST /api/repayments/{repaymentId}/pay`.
 * **Notifications**
 
