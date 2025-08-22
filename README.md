@@ -33,59 +33,52 @@ This project is structured and built to demonstrate **senior software engineerin
 
 ## 📂 Project Structure
 
-LoanWise.Api/                 # API Host
-  Program.cs                  # Entry point, middleware, DI
-  Controllers/                # REST endpoints
-    AuthController.cs
-    UsersController.cs
-    LoanController.cs
-    FundingController.cs
-    RepaymentController.cs
-    NotificationsController.cs
-    AdminController.cs
-    AdminReportsController.cs
-    BorrowersDocumentsController.cs
-    BorrowersRiskController.cs
-    LenderController.cs
-    LenderExportsController.cs
-    MetadataController.cs
+src/
+  app/                        # Core app setup (global wiring)
+    store.ts                  # Redux store
+    queryClient.ts            # React Query client
+    providers.tsx             # Global providers (Redux + Query + Auth refresh)
+    RootLayout.tsx            # Layout with NavBar + Outlet
+    routes.tsx                # Application routes
+    Landing.tsx               # Public landing page
 
-LoanWise.Application/         # Application Layer
-  Features/                   # Commands, Queries, Handlers
-    Loans/
-    Fundings/
-    Repayments/
-    Notifications/
-    Admin/
-  Common/                     # Behaviors, Interfaces, Models
-    Models/ApiResponse.cs
-    Interfaces/IUserContext.cs
-    Behaviors/ValidationBehavior.cs
+  features/                   # Feature-driven modules
+    auth/                     # Authentication
+      pages/                  # Login, Register, Me
+      api/                    # auth.api.ts
+      hooks/                  # useAuthApi.ts
+      model/                  # auth.slice.ts (Redux)
+    loans/                    # Loans domain
+      pages/                  # OpenLoansPage, ApplyLoanPage, BorrowerDashboardPage, LoanRepaymentsPage
+      api/                    # loans.api.ts
+      model/                  # LoanSummary types, etc.
+    lenders/                  # Lender-only domain
+      pages/                  # LenderDashboardPage, LenderPortfolioPage, LenderTransactionsPage
+      api/                    # lenders.api.ts
+    admin/                    # Admin-only domain
+      pages/                  # AdminUsersPage, AdminMaintenancePage, AdminAllLoansPage
+      hooks/                  # useAdmin hooks (approve, disburse, reject)
+    notifications/            # Notifications
+      pages/                  # NotificationsPage
+      api/                    # notifications.api.ts
+    repayments/               # Repayments
+      pages/                  # LoanRepaymentsPage
+      api/                    # repayments.api.ts
+    borrowers/                # Borrower risk
+      pages/                  # BorrowerRiskPage
+      api/                    # borrowers.api.ts
+    metadata/                 # Metadata endpoints
+      api/metadata.api.ts
 
-LoanWise.Domain/              # Entities + Value Objects
-  Entities/
-    User.cs
-    Loan.cs
-    Funding.cs
-    Repayment.cs
-    Notification.cs
-  Enums/
-    UserRole.cs
-    LoanStatus.cs
-    RiskLevel.cs
+  shared/                     # Reusable components/utilities
+    components/               # NavBar, ProtectedRoute, etc.
+    lib/                      # axios.ts (with auth token & refresh interceptors)
+    types/                    # Shared type defs
 
-LoanWise.Persistence/         # EF Core Persistence
-  Context/LoanWiseDbContext.cs
-  Setup/DbInitializer.cs      # Seeds system admin user
-  Configurations/             # EF model configs
+  styles/                     # Styling
+    index.css                 # Tailwind base
+    tokens.css                # Design tokens
 
-LoanWise.Infrastructure/      # Infrastructure implementations
-  Notifications/
-  Identity/
-  Services/
-
-
----
 
 ## 🚀 Getting Started
 
