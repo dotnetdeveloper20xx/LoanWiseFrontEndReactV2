@@ -33,6 +33,15 @@ This project is structured and built to demonstrate **senior software engineerin
 
 ## 📂 Project Structure
 
+Here’s a **structure.md** for your project that reflects the actual LoanWise application you’ve built (frontend + backend). I’ve broken it down clearly for each layer, aligned with the files we’ve been working on and the APIs discovered in your backend controllers.
+
+---
+
+# LoanWise — Project Structure
+
+## Frontend (React + TypeScript + Vite)
+
+```
 src/
   app/                        # Core app setup (global wiring)
     store.ts                  # Redux store
@@ -78,6 +87,116 @@ src/
   styles/                     # Styling
     index.css                 # Tailwind base
     tokens.css                # Design tokens
+```
+
+---
+
+## Backend (ASP.NET Core, Clean Architecture)
+
+```
+LoanWise.Api/                 # API Host
+  Program.cs                  # Entry point, middleware, DI
+  Controllers/                # REST endpoints
+    AuthController.cs
+    UsersController.cs
+    LoanController.cs
+    FundingController.cs
+    RepaymentController.cs
+    NotificationsController.cs
+    AdminController.cs
+    AdminReportsController.cs
+    BorrowersDocumentsController.cs
+    BorrowersRiskController.cs
+    LenderController.cs
+    LenderExportsController.cs
+    MetadataController.cs
+
+LoanWise.Application/         # Application Layer
+  Features/                   # Commands, Queries, Handlers
+    Loans/
+    Fundings/
+    Repayments/
+    Notifications/
+    Admin/
+  Common/                     # Behaviors, Interfaces, Models
+    Models/ApiResponse.cs
+    Interfaces/IUserContext.cs
+    Behaviors/ValidationBehavior.cs
+
+LoanWise.Domain/              # Entities + Value Objects
+  Entities/
+    User.cs
+    Loan.cs
+    Funding.cs
+    Repayment.cs
+    Notification.cs
+  Enums/
+    UserRole.cs
+    LoanStatus.cs
+    RiskLevel.cs
+
+LoanWise.Persistence/         # EF Core Persistence
+  Context/LoanWiseDbContext.cs
+  Setup/DbInitializer.cs      # Seeds system admin user
+  Configurations/             # EF model configs
+
+LoanWise.Infrastructure/      # Infrastructure implementations
+  Notifications/
+  Identity/
+  Services/
+```
+
+---
+
+## Current Workflow (User Journey)
+
+### Borrower
+
+1. **Register/Login** → role = Borrower (inactive until Admin approves).
+2. **Dashboard** → see applied loans with statuses.
+3. **Apply Loan** → choose amount/duration/purpose, submit → notification raised.
+4. **After Admin Approves & Disburses** → repayments generated.
+5. **Repayments Page** → pay installments, overdue clearly shown.
+6. **Notifications** → receive updates (funding, approvals, disbursements, repayments).
+
+### Lender
+
+1. **Register/Login** → role = Lender (inactive until Admin approves).
+2. **Open Loans Page** → see loans open for funding.
+3. **Fund Loan** → partial or full amount → notification raised.
+4. **Dashboard** → see funded loans, navigate to Repayments for borrower activity.
+5. **Portfolio & Transactions** → detailed records of fundings/transactions.
+
+### Admin
+
+1. **Login** → Admin role (seeded user).
+2. **All Loans** → approve, disburse, view repayments.
+3. **Users** → activate Borrowers/Lenders.
+4. **Maintenance** → system tasks.
+5. **Reports** → view loans/fundings/repayments.
+
+---
+
+✅ **Done so far**
+
+* End-to-end flows for Auth, Loan Apply, Approve, Fund, Disburse, Repayments, Notifications.
+* NavBar routing + role-based dashboards.
+* Admin: Approve/Disburse/Repayments pages.
+* Borrower: Apply loan, Dashboard, Repayments.
+* Lender: Open loans, Dashboard, Repayments view.
+
+🟡 **Next on the list**
+
+* In-app **toast notifications** (bottom-right).
+* **Unread count pill** in NavBar for notifications.
+* **Export PDF receipts** for repayments/loan agreements.
+* **Admin dashboards** (stats, overdue monitoring).
+* Polish UI/UX (loading states, error banners, success toasts).
+
+---
+
+Would you like me to generate a **downloadable `structure.md` file** (ready to commit to the repo), or just keep this as documentation in your repo’s README?
+
 
 
 ## 🚀 Getting Started
