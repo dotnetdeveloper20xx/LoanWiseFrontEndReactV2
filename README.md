@@ -5,7 +5,7 @@ This project is structured and built to demonstrate **senior software engineerin
 
 ---
 
-## ✨ Features Implemented
+## ✨ Stack set used
 
 - **Vite + React + TypeScript**: Fast build toolchain with type safety.
 - **Tailwind CSS v4**: Utility-first styling with custom design tokens (light/dark theme).
@@ -28,12 +28,6 @@ This project is structured and built to demonstrate **senior software engineerin
   - ESLint + Prettier integrated for consistent style.
   - Strict TypeScript config with path aliases (`@ → src`).
   - Organized, feature-sliced folder structure.
-
----
-
-## 📂 Project Structure
-
-Here’s a **structure.md** for your project that reflects the actual LoanWise application you’ve built (frontend + backend). I’ve broken it down clearly for each layer, aligned with the files we’ve been working on and the APIs discovered in your backend controllers.
 
 ---
 
@@ -89,64 +83,6 @@ src/
     tokens.css                # Design tokens
 ```
 
----
-
-## Backend (ASP.NET Core, Clean Architecture)
-
-```
-LoanWise.Api/                 # API Host
-  Program.cs                  # Entry point, middleware, DI
-  Controllers/                # REST endpoints
-    AuthController.cs
-    UsersController.cs
-    LoanController.cs
-    FundingController.cs
-    RepaymentController.cs
-    NotificationsController.cs
-    AdminController.cs
-    AdminReportsController.cs
-    BorrowersDocumentsController.cs
-    BorrowersRiskController.cs
-    LenderController.cs
-    LenderExportsController.cs
-    MetadataController.cs
-
-LoanWise.Application/         # Application Layer
-  Features/                   # Commands, Queries, Handlers
-    Loans/
-    Fundings/
-    Repayments/
-    Notifications/
-    Admin/
-  Common/                     # Behaviors, Interfaces, Models
-    Models/ApiResponse.cs
-    Interfaces/IUserContext.cs
-    Behaviors/ValidationBehavior.cs
-
-LoanWise.Domain/              # Entities + Value Objects
-  Entities/
-    User.cs
-    Loan.cs
-    Funding.cs
-    Repayment.cs
-    Notification.cs
-  Enums/
-    UserRole.cs
-    LoanStatus.cs
-    RiskLevel.cs
-
-LoanWise.Persistence/         # EF Core Persistence
-  Context/LoanWiseDbContext.cs
-  Setup/DbInitializer.cs      # Seeds system admin user
-  Configurations/             # EF model configs
-
-LoanWise.Infrastructure/      # Infrastructure implementations
-  Notifications/
-  Identity/
-  Services/
-```
-
----
 
 ## Current Workflow (User Journey)
 
@@ -174,110 +110,6 @@ LoanWise.Infrastructure/      # Infrastructure implementations
 3. **Users** → activate Borrowers/Lenders.
 4. **Maintenance** → system tasks.
 5. **Reports** → view loans/fundings/repayments.
-
----
-
-✅ **Done so far**
-
-* End-to-end flows for Auth, Loan Apply, Approve, Fund, Disburse, Repayments, Notifications.
-* NavBar routing + role-based dashboards.
-* Admin: Approve/Disburse/Repayments pages.
-* Borrower: Apply loan, Dashboard, Repayments.
-* Lender: Open loans, Dashboard, Repayments view.
-
-🟡 **Next on the list**
-
-* In-app **toast notifications** (bottom-right).
-* **Unread count pill** in NavBar for notifications.
-* **Export PDF receipts** for repayments/loan agreements.
-* **Admin dashboards** (stats, overdue monitoring).
-* Polish UI/UX (loading states, error banners, success toasts).
-
----
-
-Would you like me to generate a **downloadable `structure.md` file** (ready to commit to the repo), or just keep this as documentation in your repo’s README?
-
-
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js v18+
-- npm (or yarn/pnpm)
-
-### Installation
-```bash
-git clone https://github.com/<your-username>/LoanWiseFrontEndReactV2.git
-cd LoanWiseFrontEndReactV2
-npm install
-```
-
-### Environment
-Create `.env`:
-```bash
-VITE_API_BASE_URL=http://localhost:5000
-```
-
-### Run Dev Server
-```bash
-npm run dev
-```
-Visit [http://localhost:5173](http://localhost:5173).
-
----
-
-## 🔒 Authentication Flow
-
-- **Register** → `POST /api/auth/register`
-- **Login** → `POST /api/auth/login` → returns `{ token, refreshToken, profile }`
-- **Refresh** → `POST /api/auth/refresh` → Axios interceptor auto-refreshes on 401.
-- **Me** → `GET /api/users/me` → keeps Redux profile in sync.
-
-Tokens are persisted in localStorage and rehydrated on app load.
-
----
-
-## 🧩 Key Components
-
-- **RootLayout** → provides Navbar and `<Outlet />` for nested routes.
-- **ProtectedRoute** → guards routes by authentication and roles.
-- **Navbar** → role-aware nav with Register/Login or Me/Logout.
-- **LoanCard** → reusable card with funding progress.
-
----
-
-## 🛠️ Tooling & Quality
-
-- **ESLint** with React, TypeScript, Accessibility, Import rules.
-- **Prettier** for consistent formatting.
-- **VSCode settings** for format-on-save integration.
-- **Commit convention**: Conventional Commits (`feat:`, `fix:`, `chore:`).
-
----
-
-## 🌍 Deployment
-
-- Vite build optimized for production:
-  ```bash
-  npm run build
-  npm run preview
-  ```
-- Output goes into `dist/` (ready for static hosting or CDN).
-
----
-
-## 🧑‍💻 Engineering Practices Highlighted
-
-- **Feature-based modular monolith** structure.
-- **Clear separation** of app state (Redux) vs server state (React Query).
-- **Resilient auth system** with token refresh flow.
-- **Code hygiene** enforced at every commit (lint + prettier).
-- **Scalable UI** with Tailwind tokens and dark mode.
-- **Documentation & commit history** reflecting senior-level design thinking.
-
----
-
-Here’s a clear, end‑to‑end picture of the app from a **user’s** point of view—what’s live today, and what’s next to ship.
 
 ---
 
@@ -406,89 +238,22 @@ Here’s a clear, end‑to‑end picture of the app from a **user’s** point of
 
 ---
 
-## 4) Notifications (all roles)
 
-* Page: **/notifications** (+ unread pill in navbar)
-* Shows list of system notifications with **Mark read**.
-* Also surfaced via **bottom‑right toasts** (e.g., funding applied, application submitted, loan approved/disbursed).
-* Back‑end:
+✅ **Done so far**
 
-  * `GET /api/notifications` → list your notifications
-  * `PUT /api/notifications/{id}/read` → mark one read
+* End-to-end flows for Auth, Loan Apply, Approve, Fund, Disburse, Repayments, Notifications.
+* NavBar routing + role-based dashboards.
+* Admin: Approve/Disburse/Repayments pages.
+* Borrower: Apply loan, Dashboard, Repayments.
+* Lender: Open loans, Dashboard, Repayments view.
 
----
+🟡 **Next on the list**
 
-# What’s live today
-
-* **Auth**: login/register; profile hydration (`/me`).
-* **Role‑aware routing**: Borrower / Lender / Admin, with protected routes and 403 screen on mismatch.
-* **Borrower**:
-
-  * Apply loan (Purpose dropdown via metadata), toast on success; form clears.
-  * Dashboard shows loans with status + **Repayments** link.
-  * Repayments page: full schedule (+ overdue), **Pay** button for unpaid installments.
-* **Lender**:
-
-  * Open Loans page with **Fund**; toast on success + refresh.
-  * Lender Dashboard shows funded loans + **Repayments** link (read‑only).
-  * Portfolio & Transactions pages.
-* **Admin**:
-
-  * Users list (all users), toggle Active/Inactive.
-  * All Loans list: **Approve**, **Disburse**, **Repayments** (read‑only).
-  * Overdue check.
-* **Notifications**:
-
-  * Page with **Mark read**; unread **pill** in navbar; bottom‑right toasts for key actions.
-
-All these call the documented endpoints and standard `ApiResponse<T>` envelope (success/message/data) as per integration guide.
-
----
-
-# What’s next (shortlist)
-
-## A) UX polish & resilience
-
-* **Global toaster** already implemented — extend to include deep links (e.g., “View Repayments”).
-* **Empty states & skeletons** across lists (Dashboard, Open Loans, All Loans).
-* **Inline validation** (Apply Loan / Fund amounts min/max based on business rules).
-
-## B) Borrower experience
-
-* **My current application widget** on dashboard (if a loan is “in progress”).
-* **Document upload** (KYC, agreements) and **PDF receipts** for repayments.
-* **Export statements** (CSV/PDF).
-
-## C) Lender experience
-
-* **Cancel/adjust funding** (if your policy allows; else a support request workflow).
-* **Returns & yield (IRR)** breakdown; filter by period/loan.
-* **Export transactions** (CSV) endpoint to complement `/lenders/transactions`.
-
-## D) Admin & Ops
-
-* **Audit trail** (who approved/disbursed/rejected and when).
-* **Admin dashboard** KPIs (open/approved/funded/disbursed/overdue trends).
-* **Bulk operations** (approve/disburse batches) if permitted.
-* **Config UI** for Metadata (purposes, risk levels) that currently power dropdowns.
-
-## E) Platform & quality
-
-* **E2E tests** covering the golden paths:
-
-  * Borrower: register → login → apply → dashboard → repayments → pay.
-  * Lender: register → login → fund → dashboard → repayments.
-  * Admin: login → users (activate) → all loans (approve → disburse) → repayments → overdue check.
-* **Better error boundary** (consistent error page with “retry” & diagnostics).
-* **Performance**: request batching/caching (React Query) & pagination for large lists.
-* **Access enforcement in BE handlers**:
-
-  * Borrower can only view/pay their own loan.
-  * Lender can only view loans they funded.
-  * Admin can view all.
-   
-
----
+* In-app **toast notifications** (bottom-right).
+* **Unread count pill** in NavBar for notifications.
+* **Export PDF receipts** for repayments/loan agreements.
+* **Admin dashboards** (stats, overdue monitoring).
+* Polish UI/UX (loading states, error banners, success toasts).
 
 
 
