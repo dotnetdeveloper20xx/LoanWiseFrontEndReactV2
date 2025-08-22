@@ -246,11 +246,10 @@ src/
 * Admin: Approve/Disburse/Repayments pages.
 * Borrower: Apply loan, Dashboard, Repayments.
 * Lender: Open loans, Dashboard, Repayments view.
+* * In-app **toast notifications** (bottom-right).
+  * * **Unread count pill** in NavBar for notifications.
 
 🟡 **Next on the list**
-
-* In-app **toast notifications** (bottom-right).
-* **Unread count pill** in NavBar for notifications.
 * **Export PDF receipts** for repayments/loan agreements.
 * **Admin dashboards** (stats, overdue monitoring).
 * Polish UI/UX (loading states, error banners, success toasts).
