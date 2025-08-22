@@ -1,9 +1,12 @@
+// src/features/loans/pages/OpenLoansPage.tsx
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../app/store";
 import { getOpenLoans, type LoanSummary } from "../api/loans.api";
 import { useApproveLoan, useRejectLoan } from "../../admin/hooks/useAdmin";
+
+import { useToast } from "../../../shared/ui/ToastProvider";
 import { fundLoan } from "../../funding/api/fundings.api";
 
 // ---- helpers ----
@@ -144,7 +147,6 @@ function LoanCard({
 
 export default function OpenLoansPage() {
   const role = useSelector((s: RootState) => s.auth.profile?.role ?? null);
-
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["open-loans"],
     queryFn: getOpenLoans,
@@ -153,6 +155,7 @@ export default function OpenLoansPage() {
 
   const approve = useApproveLoan();
   const reject = useRejectLoan();
+  const { push } = useToast();
 
   // simple inline banner for action feedback
   const [banner, setBanner] = useState<{ kind: "success" | "error"; msg: string } | null>(null);
@@ -161,9 +164,11 @@ export default function OpenLoansPage() {
     setBanner(null);
     try {
       await fundLoan(loanId, amount);
+      push({ kind: "success", msg: "Funding applied — an admin will approve this loan." });
       setBanner({ kind: "success", msg: "Funding applied." });
       refetch();
     } catch (e: any) {
+      push({ kind: "error", msg: e?.message ?? "Funding failed." });
       setBanner({ kind: "error", msg: e?.message ?? "Funding failed." });
     }
   }
@@ -218,11 +223,14 @@ export default function OpenLoansPage() {
                 setBanner(null);
                 approve.mutate(loanId, {
                   onSuccess: () => {
+                    push({ kind: "success", msg: "Loan approved." });
                     setBanner({ kind: "success", msg: "Loan approved." });
                     refetch();
                   },
-                  onError: (e: any) =>
-                    setBanner({ kind: "error", msg: e?.message ?? "Approve failed." }),
+                  onError: (e: any) => {
+                    push({ kind: "error", msg: e?.message ?? "Approve failed." });
+                    setBanner({ kind: "error", msg: e?.message ?? "Approve failed." });
+                  },
                 });
               }}
               onReject={(loanId, reason) =>
@@ -230,11 +238,14 @@ export default function OpenLoansPage() {
                   { loanId, reason },
                   {
                     onSuccess: () => {
+                      push({ kind: "success", msg: "Loan rejected." });
                       setBanner({ kind: "success", msg: "Loan rejected." });
                       refetch();
                     },
-                    onError: (e: any) =>
-                      setBanner({ kind: "error", msg: e?.message ?? "Reject failed." }),
+                    onError: (e: any) => {
+                      push({ kind: "error", msg: e?.message ?? "Reject failed." });
+                      setBanner({ kind: "error", msg: e?.message ?? "Reject failed." });
+                    },
                   }
                 )
               }

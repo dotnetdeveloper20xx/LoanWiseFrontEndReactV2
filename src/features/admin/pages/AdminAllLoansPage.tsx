@@ -1,16 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { useApproveLoan } from "../../admin/hooks/useAdmin";
+import { Link } from "react-router-dom";
+import { useApproveLoan, useDisburseLoan } from "../../admin/hooks/useAdmin";
 import { api } from "../../../shared/lib/axios";
 
 async function getAllLoans() {
   const res = await api.get("/api/admin/reports/loans");
   return res.data?.data ?? res.data ?? [];
-}
-
-async function disburseLoan(loanId: string) {
-  const res = await api.post(`/api/loans/${loanId}/disburse`);
-  return res.data?.data ?? res.data;
 }
 
 export default function AdminAllLoansPage() {
@@ -21,6 +17,7 @@ export default function AdminAllLoansPage() {
   });
 
   const approve = useApproveLoan();
+  const disburse = useDisburseLoan();
   const [banner, setBanner] = useState<{ kind: "success" | "error"; msg: string } | null>(null);
 
   if (isLoading) return <div>Loading all loans…</div>;
@@ -49,9 +46,7 @@ export default function AdminAllLoansPage() {
 
       {banner && (
         <div
-          className={`p-3 rounded ${
-            banner.kind === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-          }`}
+          className={`p-3 rounded ${banner.kind === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
         >
           {banner.msg}
         </div>
@@ -73,8 +68,8 @@ export default function AdminAllLoansPage() {
           <tbody>
             {loans.map((x: any) => {
               const status = String(x.status ?? "").toLowerCase();
-              const approved = status === "approved" || status === "disbursed";
-              const disbursable = status === "approved";
+              const isFunded = status === "funded";
+              const isDisbursed = status === "disbursed";
 
               return (
                 <tr key={String(x.loanId)} className="border-t">
@@ -88,10 +83,9 @@ export default function AdminAllLoansPage() {
                   </td>
                   <td className="px-3 py-2">{x.purpose ?? "-"}</td>
                   <td className="px-3 py-2">{x.status}</td>
-                  <td className="px-3 py-2 flex gap-2">
+                  <td className="px-3 py-2 flex flex-wrap gap-2">
                     <button
                       className="btn btn-success"
-                      disabled={approve.isPending || approved}
                       onClick={() =>
                         approve.mutate(String(x.loanId), {
                           onSuccess: () => {
@@ -102,28 +96,28 @@ export default function AdminAllLoansPage() {
                             setBanner({ kind: "error", msg: e?.message ?? "Approve failed." }),
                         })
                       }
-                      title={approved ? "Already approved/disbursed" : "Approve loan"}
                     >
-                      {approved ? "Approved" : approve.isPending ? "Approving…" : "Approve"}
+                      Approve
                     </button>
-
                     <button
                       className="btn"
-                      disabled={!disbursable}
-                      onClick={async () => {
-                        setBanner(null);
-                        try {
-                          await disburseLoan(String(x.loanId));
-                          setBanner({ kind: "success", msg: "Loan disbursed." });
-                          refetch();
-                        } catch (e: any) {
-                          setBanner({ kind: "error", msg: e?.message ?? "Disburse failed." });
-                        }
-                      }}
-                      title={disbursable ? "Disburse loan" : "Disburse available after approval"}
+                      disabled={!isFunded || isDisbursed}
+                      onClick={() =>
+                        disburse.mutate(String(x.loanId), {
+                          onSuccess: () => {
+                            setBanner({ kind: "success", msg: "Loan disbursed." });
+                            refetch();
+                          },
+                          onError: (e: any) =>
+                            setBanner({ kind: "error", msg: e?.message ?? "Disburse failed." }),
+                        })
+                      }
                     >
-                      Disburse
+                      {isDisbursed ? "Disbursed" : "Disburse"}
                     </button>
+                    <Link to={`/loans/${x.loanId}/repayments`} className="btn">
+                      Repayments
+                    </Link>
                   </td>
                 </tr>
               );

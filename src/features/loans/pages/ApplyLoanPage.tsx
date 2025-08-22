@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { applyLoan } from "../api/loans.api";
 import { getLoanPurposes } from "../../metadata/api/metadata.api";
+import { useToast } from "../../../shared/ui/ToastProvider";
 
 export default function ApplyLoanPage() {
   const [amount, setAmount] = useState<number>(10000);
@@ -11,6 +12,7 @@ export default function ApplyLoanPage() {
   const [isSubmitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [err, setErr] = useState<string | null>(null);
+  const { push } = useToast();
 
   useEffect(() => {
     (async () => {
@@ -29,14 +31,17 @@ export default function ApplyLoanPage() {
     setSubmitting(true);
     setErr(null);
     try {
-      const data = await applyLoan({
-        amount,
-        durationInMonths: duration,
-        purpose,
-      });
+      const data = await applyLoan({ amount, durationInMonths: duration, purpose });
       setResult(data);
+      const loanId = data?.loanId ?? data;
+      push({ kind: "success", msg: `Application submitted — LoanId: ${loanId}` });
+      // clear form
+      setAmount(10000);
+      setDuration(12);
+      setPurpose(purposes[0]?.name ?? "");
     } catch (ex: any) {
       setErr(ex?.message ?? "Failed to apply for loan");
+      push({ kind: "error", msg: "Failed to apply for loan" });
     } finally {
       setSubmitting(false);
     }

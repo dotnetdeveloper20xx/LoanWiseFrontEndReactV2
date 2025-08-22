@@ -1,5 +1,7 @@
 // src/features/admin/hooks/useAdmin.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { disburseLoan } from "../../loans/api/loans.api";
+
 import {
   approveLoan,
   checkOverdueRepayments,
@@ -52,5 +54,17 @@ export function useRejectLoan() {
 export function useCheckOverdueRepayments() {
   return useMutation({
     mutationFn: () => checkOverdueRepayments(),
+  });
+}
+
+export function useDisburseLoan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (loanId: string) => disburseLoan(loanId),
+    onSuccess: () => {
+      // refresh admin lists & open loans so UI reflects the new status + generated schedule
+      qc.invalidateQueries({ queryKey: ["admin-all-loans"] });
+      qc.invalidateQueries({ queryKey: ["open-loans"] });
+    },
   });
 }

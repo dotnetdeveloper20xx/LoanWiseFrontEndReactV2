@@ -1,6 +1,6 @@
-// src/features/lenders/pages/LenderDashboardPage.tsx
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../../../shared/lib/axios";
+import { Link } from "react-router-dom";
 
 async function getMyFundings() {
   const res = await api.get("/api/fundings/my");
@@ -49,6 +49,7 @@ export default function LenderDashboardPage() {
               <th className="px-3 py-2">Your Amount</th>
               <th className="px-3 py-2">Purpose</th>
               <th className="px-3 py-2">Status</th>
+              <th className="px-3 py-2">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -60,11 +61,16 @@ export default function LenderDashboardPage() {
                 <td className="px-3 py-2">£{Number(x.amountFundedByYou ?? 0).toLocaleString()}</td>
                 <td className="px-3 py-2">{x.purpose ?? "-"}</td>
                 <td className="px-3 py-2">{x.status ?? "-"}</td>
+                <td className="px-3 py-2">
+                  <Link to={`/loans/${x.loanId}/repayments`} className="btn">
+                    Repayments
+                  </Link>
+                </td>
               </tr>
             ))}
             {items.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-3 py-6 text-center text-gray-500">
+                <td colSpan={7} className="px-3 py-6 text-center text-gray-500">
                   You haven’t funded any loans yet.
                 </td>
               </tr>

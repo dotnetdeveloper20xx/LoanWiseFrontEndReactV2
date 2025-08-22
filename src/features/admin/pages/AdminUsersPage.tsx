@@ -1,6 +1,6 @@
 // src/features/admin/pages/AdminUsersPage.tsx
 import { useMemo, useState } from "react";
-import { useAdminUsers, useUpdateUserStatus } from "../hooks/useAdmin";
+import { useAdminUsers, useUpdateUserStatus } from "../hooks/useAdmin.ts";
 import type { GetUsersQuery } from "../api/admin.api";
 
 const STATUS_LABELS = {

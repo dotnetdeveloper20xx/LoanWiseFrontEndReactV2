@@ -4,19 +4,14 @@ import { store } from "./store";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./queryClient";
 import { useEffect, type ReactNode } from "react";
-
 import { hydrateFromStorage, tokensRefreshed, logout } from "../features/auth/model/auth.slice";
 import { attachAuthToken, setupAuthRefresh } from "../shared/lib/axios";
+import { ToastProvider } from "../shared/ui/ToastProvider";
 
-/**
- * Global providers + one-time auth wiring (tokens in LS + axios refresh)
- */
+/** Global providers + one-time auth wiring (tokens in LS + axios refresh) */
 export function AppProviders({ children }: { children: ReactNode }) {
   useEffect(() => {
-    // 1) Hydrate Redux auth state from LocalStorage (persisted across reloads)
     store.dispatch(hydrateFromStorage());
-
-    // 2) Ensure axios can always read the latest tokens (fresh from LS)
     const getToken = () => localStorage.getItem("lw_token");
     const getRefresh = () => localStorage.getItem("lw_refresh");
 
@@ -25,14 +20,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
       getAccessToken: getToken,
       getRefreshToken: getRefresh,
       onTokens: async (toks) => {
-        // If tokens went missing/invalid => logout + clear cache
         if (!toks) {
           await queryClient.clear();
           store.dispatch(logout());
           return;
         }
-
-        // Tokens refreshed => update Redux and invalidate the "me" query
         store.dispatch(
           tokensRefreshed({
             token: toks.token,
@@ -41,8 +33,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
             refreshTokenExpiresAtUtc: toks.refreshTokenExpiresAtUtc ?? null,
           })
         );
-
-        // Make sure any cached identity/state is reloaded
         queryClient.invalidateQueries({ queryKey: ["me"] });
       },
     });
@@ -50,7 +40,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   return (
     <Provider store={store}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>{children}</ToastProvider>
+      </QueryClientProvider>
     </Provider>
   );
 }

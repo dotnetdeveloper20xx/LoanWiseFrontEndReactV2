@@ -1,7 +1,10 @@
-// src/features/loans/pages/BorrowerDashboardPage.tsx
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { getBorrowerHistory } from "../api/loans.api";
+
+const money = (n: unknown) =>
+  new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(Number(n ?? 0));
 
 export default function BorrowerDashboardPage() {
   const [page, setPage] = useState(1);
@@ -14,9 +17,11 @@ export default function BorrowerDashboardPage() {
     staleTime: 60_000,
   });
 
-  const total = data?.total ?? 0;
-  const items = data?.items ?? [];
-  const pages = Math.max(1, Math.ceil(total / pageSize));
+  // support both {total, items} and flat array
+  const flat = Array.isArray(data) ? data : null;
+  const total = flat ? flat.length : Number(data?.total ?? 0);
+  const items = flat ?? data?.items ?? [];
+  const pages = Math.max(1, Math.ceil((total || items.length) / pageSize));
 
   if (isLoading) return <div>Loading dashboard…</div>;
   if (isError) {
@@ -52,16 +57,27 @@ export default function BorrowerDashboardPage() {
               <th className="px-3 py-2">Created</th>
               <th className="px-3 py-2">Approved</th>
               <th className="px-3 py-2">Disbursed</th>
+              <th className="px-3 py-2">Action</th>
             </tr>
           </thead>
           <tbody>
             {items.map((x: any) => (
               <tr key={x.loanId} className="border-t">
                 <td className="px-3 py-2">{String(x.loanId).slice(0, 8)}</td>
-                <td className="px-3 py-2">£{Number(x.loanAmount ?? x.amount).toLocaleString()}</td>
-                <td className="px-3 py-2">£{Number(x.totalFunded ?? 0).toLocaleString()}</td>
+                <td className="px-3 py-2">{money(x.loanAmount ?? x.amount)}</td>
+                <td className="px-3 py-2">{money(x.totalFunded ?? 0)}</td>
                 <td className="px-3 py-2">{x.purpose ?? "-"}</td>
-                <td className="px-3 py-2">{x.status}</td>
+                <td className="px-3 py-2">
+                  <span
+                    className={`inline-block rounded px-2 py-1 ${
+                      String(x.status ?? "").toLowerCase() === "disbursed"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-gray-200 text-gray-700"
+                    }`}
+                  >
+                    {x.status}
+                  </span>
+                </td>
                 <td className="px-3 py-2">
                   {x.createdAtUtc ? new Date(x.createdAtUtc).toLocaleString() : "-"}
                 </td>
@@ -71,12 +87,17 @@ export default function BorrowerDashboardPage() {
                 <td className="px-3 py-2">
                   {x.disbursedAtUtc ? new Date(x.disbursedAtUtc).toLocaleString() : "-"}
                 </td>
+                <td className="px-3 py-2">
+                  <Link to={`/loans/${x.loanId}/repayments`} className="btn">
+                    Repayments
+                  </Link>
+                </td>
               </tr>
             ))}
             {items.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-3 py-6 text-center text-gray-500">
-                  No history yet.
+                <td colSpan={9} className="px-3 py-6 text-center text-gray-500">
+                  No loans found for your account.
                 </td>
               </tr>
             )}
@@ -84,28 +105,29 @@ export default function BorrowerDashboardPage() {
         </table>
       </div>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-gray-600">
-          Page {page} / {pages}
+      {!flat && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-600">
+            Page {page} / {pages}
+          </div>
+          <div className="flex gap-2">
+            <button
+              className="px-3 py-1 border rounded disabled:opacity-50"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+            >
+              Prev
+            </button>
+            <button
+              className="px-3 py-1 border rounded disabled:opacity-50"
+              onClick={() => setPage((p) => Math.min(pages, p + 1))}
+              disabled={page >= pages}
+            >
+              Next
+            </button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <button
-            className="px-3 py-1 border rounded disabled:opacity-50"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page <= 1}
-          >
-            Prev
-          </button>
-          <button
-            className="px-3 py-1 border rounded disabled:opacity-50"
-            onClick={() => setPage((p) => Math.min(pages, p + 1))}
-            disabled={page >= pages}
-          >
-            Next
-          </button>
-        </div>
-      </div>
+      )}
     </section>
   );
 }

@@ -1,6 +1,6 @@
 // src/features/admin/pages/AdminMaintenancePage.tsx
 import { useState } from "react";
-import { useApproveLoan, useRejectLoan, useCheckOverdueRepayments } from "../hooks/useAdmin";
+import { useApproveLoan, useRejectLoan, useCheckOverdueRepayments } from "../hooks/useAdmin.ts";
 
 export default function AdminMaintenancePage() {
   const [loanId, setLoanId] = useState("");
