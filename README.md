@@ -33,88 +33,57 @@ This project is structured and built to demonstrate **senior software engineerin
 
 ## 📂 Project Structure
 
-src/
-  app/                      # Core app scaffolding (single source of truth)
-    Landing.tsx            # Entry gate: redirects authed→/notifications, else→/login
-    providers.tsx          # Redux + React Query + ToastProvider + JWT refresh wiring
-    queryClient.ts         # React Query client config
-    store.ts               # Redux store (api slices, reducers)
-    router.tsx             # React Router (data router) + role-based protection
-    RootLayout.tsx         # Shell layout: NavBar + <Outlet/> + container spacing
+LoanWise.Api/                 # API Host
+  Program.cs                  # Entry point, middleware, DI
+  Controllers/                # REST endpoints
+    AuthController.cs
+    UsersController.cs
+    LoanController.cs
+    FundingController.cs
+    RepaymentController.cs
+    NotificationsController.cs
+    AdminController.cs
+    AdminReportsController.cs
+    BorrowersDocumentsController.cs
+    BorrowersRiskController.cs
+    LenderController.cs
+    LenderExportsController.cs
+    MetadataController.cs
 
-  features/
-    auth/                  # Authentication domain
-      api/
-        auth.api.ts        # login/register/refresh/me – standard ApiResponse envelope
-      hooks/
-        useAuthApi.ts      # useLogin/useRegister/useMe (hydrates Redux + cache management)
-      model/
-        auth.slice.ts      # token/profile state + hydrateFromStorage() (safe readers)
-        auth.types.ts      # Profile/AuthState types
-      pages/
-        LoginPage.tsx      # Centered form + friendly errors (missing/inactive account)
-        RegisterPage.tsx   # Centered form (Borrower/Lender) → redirect to /login
+LoanWise.Application/         # Application Layer
+  Features/                   # Commands, Queries, Handlers
+    Loans/
+    Fundings/
+    Repayments/
+    Notifications/
+    Admin/
+  Common/                     # Behaviors, Interfaces, Models
+    Models/ApiResponse.cs
+    Interfaces/IUserContext.cs
+    Behaviors/ValidationBehavior.cs
 
-    loans/                 # Loans domain
-      api/
-        loans.api.ts       # open, apply, my, disburse, repayments, history
-      pages/
-        OpenLoansPage.tsx          # Lender/Admin: discover + fund (Lender) / approve/reject (Admin)
-        ApplyLoanPage.tsx          # Borrower: Amount/Duration/Purpose; toast on success
-        BorrowerDashboardPage.tsx  # Borrower: my loans + status + Repayments button
-        LoanRepaymentsPage.tsx     # Shared: full schedule; Borrower/Admin can pay; overdue highlight
-      model/               # (optional) loan DTOs, status enums, mappers
+LoanWise.Domain/              # Entities + Value Objects
+  Entities/
+    User.cs
+    Loan.cs
+    Funding.cs
+    Repayment.cs
+    Notification.cs
+  Enums/
+    UserRole.cs
+    LoanStatus.cs
+    RiskLevel.cs
 
-    funding/               # Funding domain (lender actions)
-      api/
-        fundings.api.ts    # POST /api/fundings/{loanId}, GET /api/fundings/my
+LoanWise.Persistence/         # EF Core Persistence
+  Context/LoanWiseDbContext.cs
+  Setup/DbInitializer.cs      # Seeds system admin user
+  Configurations/             # EF model configs
 
-    lenders/               # Lender-only dashboards & reports
-      api/
-        lenders.api.ts     # GET portfolio, GET transactions
-      pages/
-        LenderDashboardPage.tsx     # My funded loans + Repayments button (read-only page)
-        LenderPortfolioPage.tsx     # Aggregate totals + positions
-        LenderTransactionsPage.tsx  # Filterable/paged table (from/to/loan/borrower)
+LoanWise.Infrastructure/      # Infrastructure implementations
+  Notifications/
+  Identity/
+  Services/
 
-    admin/                 # Admin-only actions & reports
-      hooks/
-        useAdmin.ts        # React Query mutations: approve, reject, disburse, update user status
-      pages/
-        AdminUsersPage.tsx       # All users (Active/Inactive toggle), paging/sort/search
-        AdminAllLoansPage.tsx    # Loans report: Approve, Disburse, Repayments
-        AdminMaintenancePage.tsx # Overdue check & handy admin actions
-
-    notifications/         # System notifications
-      api/
-        notifications.api.ts # GET list, PUT mark read
-      pages/
-        NotificationsPage.tsx   # List + Mark read + Mark all read
-
-    metadata/              # Catalogs (purposes, statuses, risk levels)
-      api/
-        metadata.api.ts    # Purposes for ApplyLoan dropdown, etc.
-
-  shared/                  # Reusable UI, hooks, utilities
-    components/
-      NavBar.tsx           # Role-aware links + unread notifications pill
-      ProtectedRoute.tsx   # JWT gate + role-based check (403 page on mismatch, no redirect loop)
-    hooks/
-      useUnreadNotifications.ts # returns unread count (polls /api/notifications)
-    lib/
-      axios.ts             # axios instance + Authorization header + 401 refresh + retry
-      env.ts               # API base URL, environment helpers
-    ui/
-      ToastProvider.tsx    # global bottom-right toasts (success/error/info)
-    types/                 # shared DTOs/types (if needed)
-    utils/                 # formatters, guards (e.g., money/date utilities)
-
-  styles/
-    global.css             # Tailwind base + tokens + theme utility classes
-
-
-- **Feature-sliced architecture** → each domain owns its `api/`, `pages/`, `model/`, `hooks/`.
-- Encourages isolation, testability, and scaling.
 
 ---
 
