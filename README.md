@@ -127,187 +127,220 @@ Tokens are persisted in localStorage and rehydrated on app load.
 
 ---
 
-## 📈 Roadmap (Next Steps)
-
-- Loan funding flow (`POST /api/fundings/{loanId}`)
-- Borrower loan application flow
-- Admin dashboards
-- Test suite (unit + integration with React Testing Library & Vitest)
+Here’s a clear, end‑to‑end picture of the app from a **user’s** point of view—what’s live today, and what’s next to ship.
 
 ---
 
-## 📜 License
-MIT — feel free to use for reference or learning.
+# How the app works (user workflow)
+
+## 0) Entry: Auth & Identity
+
+* **Landing → Login/Register**
+
+  * If not authenticated, users land on **/login** (centered form).
+  * **Register** supports Borrower or Lender.
+  * After login we hydrate the profile (`/api/users/me`) and route by role.
+  * Back‑end:
+
+    * `POST /api/auth/register` → create account
+    * `POST /api/auth/login` → returns JWT + profile
+    * `GET /api/users/me` → current user profile
+
+* **Account states**
+
+  * If credentials are wrong or account is missing, the UI shows **“Account doesn’t exist. Please register.”**
+  * If the user is created but **inactive**, the UI shows **“An admin must approve this account.”** (Admin later toggles status on `/admin/users`).
 
 ---
 
-# Here’s a clean, role‑based snapshot of what the app does today, and what’s still on the runway. Use it as your “Done / To‑Do” board.
+## 1) Borrower Journey
+
+### A) Apply for a loan
+
+* Page: **/borrower/apply**
+* User fills **Amount / Duration / Purpose** (Purpose comes from Metadata).
+* On Submit:
+
+  * We call `POST /api/loans/apply`.
+  * Show toast **“Application submitted — LoanId: …”** and clear form.
+* Back‑end:
+
+  * `GET /api/metadata/purposes` (dropdown)
+  * `POST /api/loans/apply` → creates loan application
+
+### B) See my loans & status (Dashboard)
+
+* Page: **/dashboard**
+* We load **your loans** and show status (e.g., Open/Approved/Funded/Disbursed).
+* Each row includes a **Repayments** button that links to **/loans/\:loanId/repayments**.
+* Back‑end:
+
+  * `GET /api/loans/my` → loans for current borrower
+
+### C) Repayments (view & pay)
+
+* Page: **/loans/\:loanId/repayments**
+* Shows full schedule: **amount, due date, status** (Scheduled/Paid/**Overdue**).
+* Borrower can **Pay** unpaid installments (Admin can record payments too; Lender is read‑only).
+* Back‑end:
+
+  * `GET /api/loans/{loanId}/repayments` → repayment schedule list
+  * `POST /api/repayments/{repaymentId}/pay` → mark installment paid
 
 ---
 
-# Borrower
+## 2) Lender Journey
 
-## ✅ Done
+### A) Discover open loans & fund
 
-* **Register & Login**
+* Page: **/open-loans**
+* Lender sees open loans; can enter an amount and **Fund**.
+* On success we show toast **“Funding applied — admin will review”** and refresh.
+* Back‑end:
 
-  * Create borrower account; login persists JWT and profile.
-* **Apply for a loan**
+  * `GET /api/loans/open` → open loans to fund
+  * `POST /api/fundings/{loanId}` → apply funding
 
-  * Form with amount, duration, **Purpose dropdown** (metadata).
-  * `POST /api/loans/apply`.
-* **Dashboard (My Loans / History)**
+### B) My funded loans (dashboard)
 
-  * Paginated history of my loans with clear **status**.
-  * `GET /api/loans/borrowers/history?page=&pageSize=`.
-* **View repayments for a loan**
+* Page: **/lender/dashboard**
+* List of loans the lender has funded, with a **Repayments** button to view the borrower’s schedule (read‑only for lender).
+* Back‑end:
 
-  * Unified page to show full schedule and repayment status.
-  * `GET /api/loans/{loanId}/repayments`.
-* **Make a repayment**
+  * `GET /api/fundings/my` → lender portfolio (per loan funded)
 
-  * Pay from the repayments view (visible for unpaid instalments).
-  * `POST /api/repayments/{repaymentId}/pay`.
-* **Notifications**
+### C) Portfolio & Transactions
 
-  * See all notifications; **mark read** per item or mark all.
-  * `GET /api/notifications`, `PUT /api/notifications/{id}/read`.
-* **Borrower risk summary (viewer)**
+* Pages: **/lender/portfolio**, **/lender/transactions**
+* Portfolio shows totals/positions; Transactions supports filters & paging.
+* Back‑end:
 
-  * Risk summary by borrower id (credit score, tier, flags).
-  * `GET /api/borrowers/{borrowerId}/risk-summary`.
-
-## ⏭️ To‑Do
-
-* **My current loan application status widget** (surface the latest active application, CTA for next step).
-* **Attach documents (KYC/Proofs)** if required by flow.
-* **Export statements / receipts** (PDF/CSV) for repayments.
-* **Filter & search** in dashboard (by status, date range).
-* **In‑app toasts** for borrower actions (apply, repay) with deep links.
+  * `GET /api/lenders/portfolio` → portfolio totals & positions
+  * `GET /api/lenders/transactions?from=&to=&loanId=&borrowerId=&page=&pageSize=`
 
 ---
 
-# Lender
+## 3) Admin Journey
 
-## ✅ Done
+### A) User management
 
-* **Register & Login** (as Lender).
-* **Discover open loans to fund**
+* Page: **/admin/users**
+* Admin can see **all users** (active + inactive) and set **Active/Inactive**.
+* Back‑end:
 
-  * Open Loans list with **amount** input and **Fund** button.
-  * `GET /api/loans/open`, `POST /api/fundings/{loanId}`.
-* **My Funded Loans (Dashboard)**
+  * `GET /api/admin/users` (paginated; filters/sorting)
+  * `PUT /api/admin/users/{id}/status` → set IsActive
 
-  * Portfolio of loans I’ve funded.
-  * `GET /api/fundings/my`.
-* **Lender Portfolio**
+### B) Loans control
 
-  * Totals (invested, returns, counts) + positions table.
-  * `GET /api/lenders/portfolio`.
-* **Lender Transactions**
+* Page: **/admin/all-loans**
+* Shows all loans with **Approve**, **Disburse**, and **Repayments** actions:
 
-  * Date + loan + borrower filters, paging.
-  * `GET /api/lenders/transactions?from=&to=&loanId=&borrowerId=&page=&pageSize=`.
-* **Notifications**
+  * **Approve** moves from Approved/Open toward Funded (workflow dependent).
+  * **Disburse** — when fully funded — triggers **repayment schedule generation**.
+  * **Repayments** → view schedule (read‑only).
+* Back‑end:
 
-  * See & **mark read**.
+  * `GET /api/admin/reports/loans` → admin report list
+  * `POST /api/admin/loans/{loanId}/approve` / `…/reject`
+  * `POST /api/loans/{loanId}/disburse` → disburse & create schedule
+  * `GET /api/loans/{loanId}/repayments` → schedule view
 
-## ⏭️ To‑Do
+### C) Maintenance & overdue
 
-* **Cancel / adjust a funding** (if business rules allow, or submit a request).
-* **Export transactions** (CSV/XLSX), possibly by `GET /api/lenders/transactions/export`.
-* **Yield / returns view** per loan and overall IRR.
-* **Reserved funds / wallet balance** (if applicable to business model).
-* **Watchlist / bookmarks** for loans.
+* Page: **/admin/maintenance**
+* Admin can run **Overdue check** to flag past‑due installments.
+* Back‑end:
 
----
-
-# Admin
-
-## ✅ Done
-
-* **User Management**
-
-  * **See all** users (active + inactive).
-  * Toggle **IsActive** via dropdown.
-  * `GET /api/admin/users`, `PUT /api/admin/users/{id}/status`.
-* **Loans — All & Open**
-
-  * **All Loans** (admin report) — status, funding, purpose.
-  * **Open Loans** (shared list with actions).
-  * `GET /api/admin/reports/loans`, `GET /api/loans/open`.
-* **Approve / Reject loan**
-
-  * Approve pending; Reject with reason.
-  * `POST /api/admin/loans/{loanId}/approve` / `/reject`.
-* **Disburse loan**
-
-  * Disburse after approval; repayments get generated.
-  * `POST /api/loans/{loanId}/disburse`.
-* **Overdue check**
-
-  * Trigger overdue repayments job.
-  * `POST /api/admin/repayments/check-overdue`.
-* **Repayments viewer**
-
-  * View schedule per loan.
-  * `GET /api/loans/{loanId}/repayments`.
-* **Notifications**
-
-  * Sees system notifications, **mark read**.
-  * Inline toasts on admin actions (approve/disburse) in UI.
-
-## ⏭️ To‑Do
-
-* **Admin dashboards** (KPIs: open/funded/disbursed/overdue trends; top lenders/borrowers).
-* **Audit trail** (who approved/rejected/disbursed, when, reason).
-* **Bulk operations** (bulk approve/disburse if permitted).
-* **Config master data** (loan purposes / risk thresholds UI around metadata).
-* **Downloadable reports** (CSV/PDF exports for loans/fundings/repayments).
+  * `POST /api/admin/repayments/check-overdue` → marks overdue entries
 
 ---
 
-# Cross‑cutting / Platform
+## 4) Notifications (all roles)
 
-## ✅ Done
+* Page: **/notifications** (+ unread pill in navbar)
+* Shows list of system notifications with **Mark read**.
+* Also surfaced via **bottom‑right toasts** (e.g., funding applied, application submitted, loan approved/disbursed).
+* Back‑end:
 
-* **JWT Auth + refresh**, consistent header injection; SignalR friendly.
-* **CORS** configured for local dev (Vite 5173).
-* **Role‑aware NavBar & routes** for Borrower / Lender / Admin.
-* **React Query** caching strategy; **cache clear** on login; `/me` refetch guarantees correct identity.
-* **Problem handling** with inline banners for major actions (funding, approve, disburse, pay).
-
-## ⏭️ To‑Do
-
-* **Global toast system** (dedicated lightweight toaster for success/error with deep links).
-* **Error boundary improvements** (canonical error page + retry wiring).
-* **Loading skeletons** for tables/cards.
-* **E2E tests** for the golden paths:
-
-  * Borrower: register → login → apply → see in dashboard → repay.
-  * Lender: register → login → fund → see in portfolio/transactions.
-  * Admin: login → view users → activate → approve → disburse → check overdue.
-* **Accessibility & i18n**: aria attributes, keyboard nav, message catalogs.
-* **Production hardening**: rate limits, security headers, content-disposition exposure (already done for downloads if needed).
+  * `GET /api/notifications` → list your notifications
+  * `PUT /api/notifications/{id}/read` → mark one read
 
 ---
 
-## Quick links (what we added most recently)
+# What’s live today
 
-* **Lender**
+* **Auth**: login/register; profile hydration (`/me`).
+* **Role‑aware routing**: Borrower / Lender / Admin, with protected routes and 403 screen on mismatch.
+* **Borrower**:
 
-  * Portfolio: `/lender/portfolio`
-  * Transactions: `/lender/transactions`
+  * Apply loan (Purpose dropdown via metadata), toast on success; form clears.
+  * Dashboard shows loans with status + **Repayments** link.
+  * Repayments page: full schedule (+ overdue), **Pay** button for unpaid installments.
+* **Lender**:
 
-* **Repayments**
+  * Open Loans page with **Fund**; toast on success + refresh.
+  * Lender Dashboard shows funded loans + **Repayments** link (read‑only).
+  * Portfolio & Transactions pages.
+* **Admin**:
 
-  * View & Pay: `/loans/:loanId/repayments`
+  * Users list (all users), toggle Active/Inactive.
+  * All Loans list: **Approve**, **Disburse**, **Repayments** (read‑only).
+  * Overdue check.
+* **Notifications**:
 
-* **Borrower Risk**
+  * Page with **Mark read**; unread **pill** in navbar; bottom‑right toasts for key actions.
 
-  * Risk Summary: `/borrowers/:borrowerId/risk`
+All these call the documented endpoints and standard `ApiResponse<T>` envelope (success/message/data) as per integration guide.
 
 ---
 
-If you want, I can convert this into a **living `ROADMAP.md`** with checkboxes and owners, or split into three role‑focused `DONE / TODO` files for the repo.
+# What’s next (shortlist)
+
+## A) UX polish & resilience
+
+* **Global toaster** already implemented — extend to include deep links (e.g., “View Repayments”).
+* **Empty states & skeletons** across lists (Dashboard, Open Loans, All Loans).
+* **Inline validation** (Apply Loan / Fund amounts min/max based on business rules).
+
+## B) Borrower experience
+
+* **My current application widget** on dashboard (if a loan is “in progress”).
+* **Document upload** (KYC, agreements) and **PDF receipts** for repayments.
+* **Export statements** (CSV/PDF).
+
+## C) Lender experience
+
+* **Cancel/adjust funding** (if your policy allows; else a support request workflow).
+* **Returns & yield (IRR)** breakdown; filter by period/loan.
+* **Export transactions** (CSV) endpoint to complement `/lenders/transactions`.
+
+## D) Admin & Ops
+
+* **Audit trail** (who approved/disbursed/rejected and when).
+* **Admin dashboard** KPIs (open/approved/funded/disbursed/overdue trends).
+* **Bulk operations** (approve/disburse batches) if permitted.
+* **Config UI** for Metadata (purposes, risk levels) that currently power dropdowns.
+
+## E) Platform & quality
+
+* **E2E tests** covering the golden paths:
+
+  * Borrower: register → login → apply → dashboard → repayments → pay.
+  * Lender: register → login → fund → dashboard → repayments.
+  * Admin: login → users (activate) → all loans (approve → disburse) → repayments → overdue check.
+* **Better error boundary** (consistent error page with “retry” & diagnostics).
+* **Performance**: request batching/caching (React Query) & pagination for large lists.
+* **Access enforcement in BE handlers**:
+
+  * Borrower can only view/pay their own loan.
+  * Lender can only view loans they funded.
+  * Admin can view all.
+   
+
+---
+
+
+
+
 
